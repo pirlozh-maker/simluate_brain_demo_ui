@@ -1,53 +1,69 @@
-# Digital Twin Neuro Demo (Three.js + TypeScript)
+# 3D EEG 64-Channel Scalp Topomap Demo (Three.js + Vite)
 
-A lightweight Vite + Three.js demo showing a humanoid digital twin with animated walking, 53 MoCap markers, EEG 64 electrodes, EMG 8 sensors, and a simulated amplifier box. All signals are simulated locally (no backend).
+A Three.js + TypeScript demo that renders a translucent 3D head/scalp and a real-time 64-channel EEG topomap. The heatmap is computed in a fragment shader using Gaussian/RBF interpolation across the scalp surface (no external models or network assets required).
 
 ## Quick Start
 
 ```bash
-npm i
+npm install
 npm run dev
 ```
 
 Open the printed URL (usually http://localhost:5173).
 
+## Features
+
+- OrbitControls for rotate/pan/zoom.
+- Procedural head/scalp (ellipsoid + simple nose).
+- 64 electrodes following the 10-10/10-20 naming convention.
+- Continuous scalp topomap computed on GPU with Gaussian kernels.
+- Diverging colormap + vertical colorbar overlay.
+- Hover to inspect electrode name and current µV value.
+- Modes: single hotspot, dual hotspot, random burst.
+
 ## Project Structure
 
 ```
 src/
-  scene/      # 3D scene & rigs
-  signal/     # EEG/EMG simulation + montage data
-  ui/         # HUD, controls, waveform panel
-  assets/     # optional assets (GLB, textures)
+  eeg64.ts            # 64 electrode list (names + approximate scalp coords)
+  colormap.ts         # color stops + gradient helper
+  topomapMaterial.ts  # shader material for continuous topomap
+  brainProcedural.ts  # procedural brain mesh with gyri/sulci noise
+  fitCamera.ts        # fit-to-object camera helper
+  main.ts             # scene setup, simulation, UI
+  style.css           # minimal UI styles
 ```
 
-## Interaction
+## Topomap Algorithm
 
-- **OrbitControls**: drag to rotate, scroll to zoom, right-drag to pan.
-- **Click EEG electrode**: highlights electrode, shows label, and updates waveform.
-- **Click EMG sensor**: highlights EMG channel and updates waveform.
-- **Panel**: play/pause, speed (0.5×/1×/2×), toggle EEG labels, toggle 53 markers, camera presets.
+The fragment shader interpolates scalp values using a Gaussian (RBF) kernel:
 
-## Replace Humanoid GLB (Optional)
+```
+w_i = exp(-d^2 / (2 * sigma^2))
+value = sum(w_i * v_i) / sum(w_i)
+```
 
-The current humanoid is a procedural rig so the demo can run without external assets. To replace it with a skinned GLB:
+- `d` is the 3D distance between a fragment on the scalp surface and each electrode position.
+- `sigma` controls smoothness (slider in the UI).
+- `v_i` are the simulated EEG values for each electrode.
 
-1. Drop the GLB into `src/assets/`.
-2. Use `GLTFLoader` inside `SceneManager` (or a new `HumanoidRig` implementation) to load the model and drive `gaitPhase` from the animation mixer.
-3. Keep the `HumanoidJoints` interface by mapping GLB bones (head, shoulders, elbows, wrists, hips, knees, ankles, toes) to marker and sensor rigs.
+This produces a continuous, smoothly varying map across the head surface.
 
-> Tip: When no GLB is available, the fallback rig still supports 53 markers, EEG/EMG overlays, and UI interactions.
+## Parameters
 
-## Connect Real Data Later
+- **Sigma**: interpolation smoothness on the scalp.
+- **Amplitude**: peak µV range used for the color scale.
+- **Mode**: single hotspot / dual hotspot / random burst.
+- **Labels**: toggle electrode name overlays.
 
-- **EEG**: replace `SignalBus.step()` with real signal ingestion. Keep `getSnapshot()` returning RMS/bandpower for visualization. See `src/signal/SignalBus.ts`.
-- **EMG**: replace envelope generation with actual EMG rectified/envelope values. See `src/signal/SignalBus.ts`.
-- **MoCap**: `MarkerRig` can be extended to read per-frame 53×3 data. The current structure isolates marker definitions so you can swap the update path.
+## Local Models (Optional)
 
-## Self-Test Checklist
+If `public/assets/brain.glb` or `public/assets/head.glb` exists, the demo will load them. Otherwise it falls back to the procedural brain mesh.
 
-- [ ] 页面进入后，走路动画自动播放
-- [ ] OrbitControls 正常（旋转、缩放、平移）
-- [ ] 点击电极后显示 label 与波形
-- [ ] EEG/EMG 信号持续变化，并与步态弱同步
-- [ ] 53 个 markers 可切换显示，且随动画运动
+## Swap in Real EEG Data
+
+Replace the `updateSimulation()` logic in `src/main.ts` with live device data:
+
+1. Parse incoming values (64 floats in µV).
+2. Update the `values` array.
+3. Call `topomapMaterial.uniformsNeedUpdate = true;` after each update.
