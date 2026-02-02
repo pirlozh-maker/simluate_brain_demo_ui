@@ -27,7 +27,9 @@ Open the printed URL (usually http://localhost:5173).
 src/
   eeg64.ts            # 64 electrode list (names + approximate scalp coords)
   colormap.ts         # color stops + gradient helper
-  TopomapMaterial.ts  # shader material for continuous topomap
+  topomapMaterial.ts  # shader material for continuous topomap
+  brainProcedural.ts  # procedural brain mesh with gyri/sulci noise
+  fitCamera.ts        # fit-to-object camera helper
   main.ts             # scene setup, simulation, UI
   style.css           # minimal UI styles
 ```
@@ -53,6 +55,10 @@ This produces a continuous, smoothly varying map across the head surface.
 - **Amplitude**: peak µV range used for the color scale.
 - **Mode**: single hotspot / dual hotspot / random burst.
 - **Labels**: toggle electrode name overlays.
+
+## Local Models (Optional)
+
+If `public/assets/brain.glb` or `public/assets/head.glb` exists, the demo will load them. Otherwise it falls back to the procedural brain mesh.
 
 ## Swap in Real EEG Data
 

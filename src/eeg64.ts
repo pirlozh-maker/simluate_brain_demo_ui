@@ -69,3 +69,14 @@ export const EEG_64: ElectrodeDefinition[] = [
 ];
 
 export const degreesToRadians = (deg: number) => (deg * Math.PI) / 180;
+
+export const sphericalToCartesian = (lat: number, lon: number) => {
+  const latRad = degreesToRadians(lat);
+  const lonRad = degreesToRadians(lon);
+  const cosLat = Math.cos(latRad);
+  return {
+    x: cosLat * Math.sin(lonRad),
+    y: Math.sin(latRad),
+    z: cosLat * Math.cos(lonRad),
+  };
+};
