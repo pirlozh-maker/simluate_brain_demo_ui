@@ -1,6 +1,6 @@
-# 3D EEG 64-Channel Scalp Topomap Demo (Three.js + Vite)
+# EverSelf — Digital Twin System Demo
 
-A Three.js + TypeScript demo that renders a translucent 3D head/scalp and a real-time 64-channel EEG topomap. The heatmap is computed in a fragment shader using Gaussian/RBF interpolation across the scalp surface (no external models or network assets required).
+EverSelf is a front-end only demo that emulates a digital twin control platform. It highlights the 3D Twin Preview as the brand anchor, implements BUILD/LIVE modes, and runs a mock event bus with replayable telemetry and state transitions.
 
 ## Quick Start
 
@@ -11,59 +11,51 @@ npm run dev
 
 Open the printed URL (usually http://localhost:5173).
 
-## Features
+## Product Experience
 
-- OrbitControls for rotate/pan/zoom.
-- Procedural head/scalp (ellipsoid + simple nose).
-- 64 electrodes following the 10-10/10-20 naming convention.
-- Continuous scalp topomap computed on GPU with Gaussian kernels.
-- Diverging colormap + vertical colorbar overlay.
-- Hover to inspect electrode name and current µV value.
-- Modes: single hotspot, dual hotspot, random burst.
+### BUILD Mode
+
+- **Cockpit** (default): 3D Twin Preview, overlay toggles, HUD gauges, Loop Ring, Copilot batch builder, and evidence drawer.
+- **Canvas**: DAG flow editor with runnable nodes (React Flow).
+- **Foundry**: Scenario library + batch creation + QA gate / factory line views.
+- **Bench**: Robustness field heatmap with linked preview.
+- **Compare**: Session pair comparison + calibration actions.
+- **Lab / Memory / Settings**: Supporting views for experiments, replay, and privacy controls.
+
+### LIVE Mode
+
+- **Live Twin**: Live HUD + stage. Locked until score threshold and QA streak are met (demo unlock).
+- **Capture / Coach / Memory / Settings**: Companion tooling panels.
+
+## Mock Data & State Machine
+
+The mock event bus simulates telemetry and twin state updates:
+
+- **Telemetry**: every 500ms (quality, latency, dropout, score, gap, coverage, confidence)
+- **Twin state**: every 1s (posture, heatmaps, force vectors, covariance topology)
+- **Replay**: last 60s stored in a ring buffer, replayable in Cockpit
+
+Pipeline stages (front-end state machine):
+
+```
+IDLE → INGESTING → CALIBRATING → GENERATING → QA_CHECKING → BENCHMARKING → READY_FOR_LIVE
+```
+
+Failures are tagged with root-cause labels (e.g., `sync_drift`, `eeg_line_noise`, `contact_model_mismatch`).
 
 ## Project Structure
 
 ```
 src/
-  eeg64.ts            # 64 electrode list (names + approximate scalp coords)
-  colormap.ts         # color stops + gradient helper
-  topomapMaterial.ts  # shader material for continuous topomap
-  brainProcedural.ts  # procedural brain mesh with gyri/sulci noise
-  fitCamera.ts        # fit-to-object camera helper
-  main.ts             # scene setup, simulation, UI
-  style.css           # minimal UI styles
+  app/            # routing and layout shell
+  components/     # shared UI components (stage, HUD, loop ring, etc.)
+  mock/           # event bus + mock generators
+  pages/          # BUILD / LIVE pages
+  store/          # Zustand slices (telemetry/twin/pipeline/ui/batches)
+  styles/         # design tokens + global styling
 ```
 
-## Topomap Algorithm
+## Notes
 
-The fragment shader interpolates scalp values using a Gaussian (RBF) kernel:
-
-```
-w_i = exp(-d^2 / (2 * sigma^2))
-value = sum(w_i * v_i) / sum(w_i)
-```
-
-- `d` is the 3D distance between a fragment on the scalp surface and each electrode position.
-- `sigma` controls smoothness (slider in the UI).
-- `v_i` are the simulated EEG values for each electrode.
-
-This produces a continuous, smoothly varying map across the head surface.
-
-## Parameters
-
-- **Sigma**: interpolation smoothness on the scalp.
-- **Amplitude**: peak µV range used for the color scale.
-- **Mode**: single hotspot / dual hotspot / random burst.
-- **Labels**: toggle electrode name overlays.
-
-## Local Models (Optional)
-
-If `public/assets/brain.glb` or `public/assets/head.glb` exists, the demo will load them. Otherwise it falls back to the procedural brain mesh.
-
-## Swap in Real EEG Data
-
-Replace the `updateSimulation()` logic in `src/main.ts` with live device data:
-
-1. Parse incoming values (64 floats in µV).
-2. Update the `values` array.
-3. Call `topomapMaterial.uniformsNeedUpdate = true;` after each update.
+- Pure front-end demo, no backend required.
+- All data is mocked but designed to feel like a real system with state transitions.

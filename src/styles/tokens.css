@@ -1,0 +1,17 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b1116;
+  --bg-alt: #0f161d;
+  --panel: #111a22;
+  --panel-border: #1b2a34;
+  --text: #dbe7f3;
+  --muted: #7e8d9b;
+  --accent: #6df0ff;
+  --accent-2: #66f2a4;
+  --warning: #ffcf5c;
+  --danger: #ff7c7c;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --gap: 16px;
+}
