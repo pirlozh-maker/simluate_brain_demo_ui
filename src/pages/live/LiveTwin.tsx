@@ -31,7 +31,7 @@ const LiveTwin = () => {
             <span>Lock condition</span>
             <strong>{liveUnlocked ? 'Cleared' : 'Pending'}</strong>
           </div>
-          <p className="muted">Need score > 82 and 2 QA passes.</p>
+          <p className="muted">Need score &gt; 82 and 2 QA passes.</p>
         </aside>
       </div>
     </div>
